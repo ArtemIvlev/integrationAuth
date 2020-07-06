@@ -5,7 +5,7 @@ info:
 servers:
   - url: 'http://localhost:3000'
 paths:
-  /api/v1/users:
+  /user:
     parameters: []
     get:
       summary: Get client info by ucn and domain
