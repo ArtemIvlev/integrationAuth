@@ -1,0 +1,182 @@
+ openapi: 3.0.0
+info:
+  title: integration-auth
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /api/v1/users:
+    parameters: []
+    get:
+      summary: Get client info by ucn and domain
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+              examples:
+                User not found:
+                  value:
+                    type: user_not_found
+                    message: User not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+              examples:
+                Unexpected error:
+                  value:
+                    type: generic_error
+                    message: Something went wrong
+      operationId: get user by ucn
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: domain
+          description: Домен пользователя. Если не задан - по умолчанию master
+        - schema:
+            type: string
+          in: query
+          name: ucn
+          description: УНК пользователя
+          required: true
+      description: Поиск клиента в системе АЦ по УНК и домену
+components:
+  schemas:
+    UserDto:
+      title: UserDto
+      type: object
+      x-examples:
+        example-1: {}
+      description: Краткая информация о клиенте в системе АЦ
+      properties:
+        ucn:
+          type: string
+          description: Уникальный номер клиента
+        alias:
+          type: string
+          description: Псевдоним пользователя
+        domain:
+          type: string
+          description: Домен пользователя
+        passwordExpired:
+          type: boolean
+          description: 'Признак того, что пароль просрочен'
+        passwordMustChange:
+          type: boolean
+          description: Признак истечения пароля
+        passwordExpirationTime:
+          type: string
+          format: date-time
+          description: Дата и время истечения пароля
+        authenticationProvider:
+          type: string
+          description: Признак использования кастомной аутентификации
+        lock:
+          $ref: '#/components/schemas/UserLock'
+        codeWord:
+          type: string
+          description: Кодовое слово клиента
+        smsAuthentication:
+          type: boolean
+          description: допустимость аутентификации по SMS
+        remotePasswordRestore:
+          type: boolean
+          description: допустимость дистанционного восстановления пароля
+        homePhone:
+          type: string
+          description: Номер домашнего телефона
+        mobilePhone:
+          type: string
+          description: Номер мобильного телефона
+        auxMobilePhone:
+          type: string
+        email:
+          type: string
+          description: Адрес электронной почты
+        linkedUcn:
+          type: string
+          description: УНК связанной учетной записи
+        linkedDomain:
+          type: string
+          description: Домен связанной учетной записи
+        imsiStatus:
+          $ref: '#/components/schemas/ImsiStatus'
+        discredited:
+          type: boolean
+          description: Признак того что клиент скомпрометирован
+        discreditedTillTime:
+          type: string
+          format: date-time
+          description: 'Дата и время, до которого клиент считается скомпрометирован'
+        discreditedCodes:
+          type: array
+          description: 'Коды причин, почему клиент был скомпрометирован'
+          items:
+            type: integer
+        lastPasswordRestoreDate:
+          type: string
+          format: date-time
+          description: Дата и время последнего изменения пароля
+        lastPasswordRestoreChannel:
+          type: string
+          description: 'Канал, с помощью которого было произведено последнее изменение пароля'
+    UserLock:
+      type: object
+      title: UserLock
+      enum:
+        - NONE
+        - TEMPORARY
+        - PERMANENT
+      description: Данные о статусе блокировки пользователя
+      properties:
+        type:
+          $ref: '#/components/schemas/LockType'
+        lockTime:
+          type: string
+          description: Дата и время блокировки
+        reasonCode:
+          type: string
+          description: Код причины блокировки
+        reasonComment:
+          type: string
+          description: Комментарий к причине блокировки
+    ImsiStatus:
+      type: string
+      title: ImsiStatus
+      enum:
+        - NOT_AVAILABLE
+        - NOT_SET
+        - SET
+        - NOT_MONITORING
+    LockType:
+      type: string
+      title: LockType
+      enum:
+        - NONE
+        - TEMPORARY
+        - PERMANENT
+    ExceptionObject:
+      title: ExceptionObject
+      type: object
+      description: Информация об ошибке
+      properties:
+        type:
+          type: string
+          description: тип ошибки
+        message:
+          type: string
+          description: 'Сообщение, описывающее ошибку'
+  securitySchemes: {}
