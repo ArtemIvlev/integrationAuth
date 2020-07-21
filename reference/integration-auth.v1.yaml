@@ -1,182 +1,374 @@
-openapi: 3.0.0
+openapi: 3.0.1
 info:
-  title: integration-auth
-  version: '1.0'
+  title: OpenAPI definition
+  version: v0
 servers:
-  - url: 'http://localhost:3000'
+  - url: http://localhost:8080
 paths:
-  /user:
-    parameters: []
-    get:
-      summary: Get client info by ucn and domain
-      tags: []
+  /authentication/getOtp:
+    post:
+      tags:
+        - Authentication management
+      summary: Get sms OTP operation
+      operationId: getSmsOtp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetSmsOtpRestRequest'
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserDto'
-        '404':
-          description: Not Found
+                $ref: '#/components/schemas/GetSmsOtpResponse'
+        "500":
+          description: Unexpected error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
-              examples:
-                User not found:
-                  value:
-                    type: user_not_found
-                    message: User not found
-        '500':
-          description: Internal Server Error
+        "404":
+          description: User not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
-              examples:
-                Unexpected error:
-                  value:
-                    type: generic_error
-                    message: Something went wrong
-      operationId: get user by ucn
+        "403":
+          description: IMSI not verified, user is disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "422":
+          description: Incorrect request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationExceptionObject'
+  /authentication/sms-otp:
+    post:
+      tags:
+        - Authentication management
+      summary: Get sms OTP operation
+      operationId: getSmsOtp_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetSmsOtpRestRequest'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSmsOtpResponse'
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "403":
+          description: IMSI not verified, user is disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "422":
+          description: Incorrect request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationExceptionObject'
+  /devices:
+    post:
+      tags:
+        - Device token management
+      summary: Add device token
+      description: Create and assign device to user with specified UCN
+      operationId: addDeviceToken
       parameters:
-        - schema:
-            type: string
-          in: query
-          name: domain
-          description: Домен пользователя. Если не задан - по умолчанию master
-        - schema:
-            type: string
-          in: query
-          name: ucn
-          description: УНК пользователя
+        - name: X-UNC
+          in: header
           required: true
-      description: Поиск клиента в системе АЦ по УНК и домену
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddDeviceTokenRequestBody'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceToken'
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+  /devices/{deviceTokenId}:
+    get:
+      tags:
+        - Device token management
+      summary: Get device token info
+      description: Get device token info by deviceTokenId
+      operationId: getDeviceToken
+      parameters:
+        - name: deviceTokenId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "404":
+          description: Device token not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceToken'
+        "400":
+          description: Error has been occurred in Authentication Service request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "403":
+          description: Device token is not active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+  /user:
+    get:
+      tags:
+        - User management
+      summary: Get user info
+      description: Returns user sensitive security info
+      operationId: findUser
+      parameters:
+        - name: ucn
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: domain
+          in: query
+          required: false
+          schema:
+            type: string
+            default: master
+      responses:
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoDto'
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
 components:
   schemas:
-    UserDto:
-      title: UserDto
+    GetSmsOtpRestRequest:
+      required:
+        - domain
+        - id
       type: object
-      x-examples:
-        example-1: {}
-      description: Краткая информация о клиенте в системе АЦ
+      properties:
+        id:
+          type: string
+        domain:
+          type: string
+    GetSmsOtpResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+    ExceptionObject:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - device_token_not_active
+            - user_locked
+            - user_locked
+            - user_locked
+            - device_not_found
+            - user_not_found
+            - imsi_not_verified
+            - generic_business_logic
+            - generic_error
+        message:
+          type: string
+    ErrorField:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+    ValidationExceptionObject:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - device_token_not_active
+            - user_locked
+            - user_locked
+            - user_locked
+            - device_not_found
+            - user_not_found
+            - imsi_not_verified
+            - generic_business_logic
+            - generic_error
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorField'
+    AddDeviceTokenRequestBody:
+      type: object
+      properties:
+        clientName:
+          type: string
+        uniqueDeviceId:
+          type: string
+        epsKeyPairVersion:
+          type: string
+        encryptedSessionKey:
+          type: string
+        maaVersion:
+          type: string
+        deviceName:
+          type: string
+    DeviceToken:
+      type: object
+      properties:
+        domain:
+          type: string
+        challenge:
+          type: string
+        deviceName:
+          type: string
+        ucn:
+          type: string
+        deviceTokenID:
+          type: string
+        regDate:
+          type: string
+          format: date-time
+    UserInfoDto:
+      type: object
       properties:
         ucn:
           type: string
-          description: Уникальный номер клиента
         alias:
           type: string
-          description: Псевдоним пользователя
         domain:
           type: string
-          description: Домен пользователя
         passwordExpired:
           type: boolean
-          description: 'Признак того, что пароль просрочен'
         passwordMustChange:
           type: boolean
-          description: Признак истечения пароля
         passwordExpirationTime:
           type: string
           format: date-time
-          description: Дата и время истечения пароля
         authenticationProvider:
           type: string
-          description: Признак использования кастомной аутентификации
         lock:
           $ref: '#/components/schemas/UserLock'
         codeWord:
           type: string
-          description: Кодовое слово клиента
         smsAuthentication:
           type: boolean
-          description: допустимость аутентификации по SMS
         remotePasswordRestore:
           type: boolean
-          description: допустимость дистанционного восстановления пароля
         homePhone:
           type: string
-          description: Номер домашнего телефона
         mobilePhone:
           type: string
-          description: Номер мобильного телефона
         auxMobilePhone:
           type: string
         email:
           type: string
-          description: Адрес электронной почты
         linkedUcn:
           type: string
-          description: УНК связанной учетной записи
         linkedDomain:
           type: string
-          description: Домен связанной учетной записи
         imsiStatus:
-          $ref: '#/components/schemas/ImsiStatus'
+          type: string
         discredited:
           type: boolean
-          description: Признак того что клиент скомпрометирован
         discreditedTillTime:
           type: string
           format: date-time
-          description: 'Дата и время, до которого клиент считается скомпрометирован'
         discreditedCodes:
           type: array
-          description: 'Коды причин, почему клиент был скомпрометирован'
           items:
             type: integer
+            format: int32
         lastPasswordRestoreDate:
           type: string
           format: date-time
-          description: Дата и время последнего изменения пароля
         lastPasswordRestoreChannel:
           type: string
-          description: 'Канал, с помощью которого было произведено последнее изменение пароля'
     UserLock:
       type: object
-      title: UserLock
-      enum:
-        - NONE
-        - TEMPORARY
-        - PERMANENT
-      description: Данные о статусе блокировки пользователя
       properties:
         type:
-          $ref: '#/components/schemas/LockType'
+          type: string
+          enum:
+            - NONE
+            - TEMPORARY
+            - PERMANENT
         lockTime:
           type: string
-          description: Дата и время блокировки
+          format: date-time
         reasonCode:
           type: string
-          description: Код причины блокировки
         reasonComment:
           type: string
-          description: Комментарий к причине блокировки
-    ImsiStatus:
-      type: string
-      title: ImsiStatus
-      enum:
-        - NOT_AVAILABLE
-        - NOT_SET
-        - SET
-        - NOT_MONITORING
-    LockType:
-      type: string
-      title: LockType
-      enum:
-        - NONE
-        - TEMPORARY
-        - PERMANENT
-    ExceptionObject:
-      title: ExceptionObject
-      type: object
-      description: Информация об ошибке
-      properties:
-        type:
-          type: string
-          description: тип ошибки
-        message:
-          type: string
-          description: 'Сообщение, описывающее ошибку'
-  securitySchemes: {}
