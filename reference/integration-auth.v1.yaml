@@ -26,14 +26,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetSmsOtpResponse'
-        "422":
-          description: Incorrect request data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationExceptionObject'
-        "404":
-          description: 'Returned error types: user_not_found'
+        "500":
+          description: 'Returned error types: generic_error'
           content:
             application/json:
               schema:
@@ -44,8 +38,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
-        "500":
-          description: 'Returned error types: generic_error'
+        "422":
+          description: Incorrect request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationExceptionObject'
+        "404":
+          description: 'Returned error types: user_not_found'
           content:
             application/json:
               schema:
@@ -70,6 +70,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetSmsOtpResponse'
+        "500":
+          description: 'Returned error types: generic_error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "403":
+          description: 'Returned error types: imsi_not_verified'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
         "422":
           description: Incorrect request data
           content:
@@ -82,14 +94,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
-        "403":
-          description: 'Returned error types: imsi_not_verified'
+  /devices:
+    post:
+      tags:
+        - Device token management
+      summary: Add device token
+      description: Create device token of user with specified ucn. <br />Endpoint
+        belongs to a group of private URLs that can only be accessed using the JWT
+        token. <br />If request is sending to the service directly then parameter
+        X-UNC must be present in headers. <br />If the request is sent through the
+        api gateway, then the X-UNC parameter is provided by it
+      operationId: addDeviceToken
+      parameters:
+        - name: X-UNC
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddDeviceTokenRequestBody'
+      responses:
+        "500":
+          description: 'Returned error types: generic_error'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
-        "500":
-          description: 'Returned error types: generic_error'
+        "200":
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddDeviceTokenResponse'
+        "404":
+          description: 'Returned error types: user_not_found'
           content:
             application/json:
               schema:
@@ -133,73 +174,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
-  /devices:
-    post:
-      tags:
-        - Device token management
-      summary: Add device token
-      description: Create device token of user with specified ucn. <br />Endpoint
-        belongs to a group of private URLs that can only be accessed using the JWT
-        token. <br />If request is sending to the service directly then parameter
-        X-UNC must be present in headers. <br />If the request is sent through the
-        api gateway, then the X-UNC parameter is provided by it
-      operationId: addDeviceToken
-      parameters:
-        - name: X-UNC
-          in: header
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddDeviceTokenRequestBody'
-      responses:
-        "200":
-          description: default response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AddDeviceTokenResponse'
-        "404":
-          description: 'Returned error types: user_not_found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
-        "500":
-          description: 'Returned error types: generic_error'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
   /user:
     get:
       tags:
         - User management
       summary: Get user info
-      description: Get info of user with specified ucn and domain
-      operationId: findUser
+      operationId: getUserInfo
       parameters:
         - name: ucn
           in: query
+          description: Unique client identifier
           required: true
           schema:
             type: string
         - name: domain
           in: query
+          description: User domain
           required: false
           schema:
             type: string
             default: master
+        - name: system
+          in: query
+          description: System identifier for which the ucn is specified
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Client type identifier in CIM model
+          required: false
+          schema:
+            type: string
+            default: "000"
+        - name: expand
+          in: query
+          description: List of parameters indicating the need to load additional info
+            of user. <br />* devices - load list of linked devices.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+            default: ""
       responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserInfoDto'
         "404":
           description: User not found
           content:
@@ -208,6 +226,18 @@ paths:
                 $ref: '#/components/schemas/ExceptionObject'
         "500":
           description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoDto'
+        "403":
+          description: User locked
           content:
             application/json:
               schema:
@@ -232,6 +262,26 @@ components:
         transactionId:
           type: string
           description: Transaction id of sms module according to sent sms otp
+    ExceptionObject:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Error type
+          enum:
+            - device_token_not_active
+            - user_locked
+            - user_locked
+            - user_locked
+            - device_not_found
+            - user_not_found
+            - imsi_not_verified
+            - generic_business_logic
+            - generic_error
+        message:
+          type: string
+          description: Error message
+      description: DTO defining format of response when any error has been occurred
     ErrorField:
       type: object
       properties:
@@ -262,48 +312,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ErrorField'
-    ExceptionObject:
-      type: object
-      properties:
-        type:
-          type: string
-          description: Error type
-          enum:
-            - device_token_not_active
-            - user_locked
-            - user_locked
-            - user_locked
-            - device_not_found
-            - user_not_found
-            - imsi_not_verified
-            - generic_business_logic
-            - generic_error
-        message:
-          type: string
-          description: Error message
-      description: DTO defining format of response when any error has been occurred
-    DeviceToken:
-      type: object
-      properties:
-        domain:
-          type: string
-          description: User domain
-        challenge:
-          type: string
-          description: Number must be used for device token authentication
-        deviceName:
-          type: string
-          description: Device token name
-        ucn:
-          type: string
-          description: Unique client identifier
-        deviceTokenID:
-          type: string
-          description: Device token id (as PAN value)
-        regDate:
-          type: string
-          description: Device token registration time
-          format: date-time
     AddDeviceTokenRequestBody:
       type: object
       properties:
@@ -337,33 +345,190 @@ components:
         requestActivationCode:
           type: boolean
           description: Indicates that need request to activate device token
-    UserInfoDto:
+    DeviceToken:
+      type: object
+      properties:
+        domain:
+          type: string
+          description: User domain
+        challenge:
+          type: string
+          description: Number must be used for device token authentication
+        deviceName:
+          type: string
+          description: Device token name
+        ucn:
+          type: string
+          description: Unique client identifier
+        deviceTokenID:
+          type: string
+          description: Device token id (as PAN value)
+        regDate:
+          type: string
+          description: Device token registration time
+          format: date-time
+    AuthenticationMethodsDto:
+      type: object
+      properties:
+        oneTimePassword:
+          type: boolean
+        challengeResponse:
+          type: boolean
+        messageAuthenticationCode:
+          type: boolean
+        sms:
+          type: boolean
+        tokenChallengeResponse:
+          type: boolean
+        tokenMessageAuthenticationCode:
+          type: boolean
+        deviceTokenChallengeResponse:
+          type: boolean
+        deviceTokenMessageAuthenticationCode:
+          type: boolean
+      description: Status of available authentication methods
+    ClientDto:
+      type: object
+      properties:
+        number:
+          type: string
+          description: Client identifier in the system
+        system:
+          type: string
+          description: System identifier
+        globalID:
+          type: string
+        type:
+          type: string
+          description: Client type identifier in CIM model
+        identifications:
+          type: array
+          description: List of client identifiers in another systems
+          items:
+            $ref: '#/components/schemas/ClientIdentificationDto'
+    ClientIdentificationDto:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Client status
+        system:
+          type: string
+          description: System number
+        orgUnit:
+          type: string
+          description: Organization unit
+        id:
+          type: string
+          description: Client identifier in the system
+      description: List of client identifiers in another systems
+    DeviceDto:
+      type: object
+      properties:
+        aid:
+          type: string
+        aip:
+          type: string
+        atc:
+          type: string
+        cdol1:
+          type: string
+        cid:
+          type: string
+        cardData:
+          type: string
+        iad:
+          type: string
+        iaf:
+          type: string
+        iipb:
+          type: string
+        domain:
+          type: string
+        emvType:
+          type: string
+        keyKcv:
+          type: string
+        keyLabel:
+          type: string
+        serialNo:
+          type: string
+        deviceTokenID:
+          type: string
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+        type:
+          type: string
+          enum:
+            - EMV_CARD
+            - SOFTWARE_TOKEN
+            - DEVICE_TOKEN
+        alias:
+          type: string
+        registrationTime:
+          type: string
+          format: date-time
+        applicationName:
+          type: string
+        pan:
+          type: string
+        activated:
+          type: boolean
+        activationCode:
+          type: string
+        activationTime:
+          type: string
+          format: date-time
+      description: List of linked devices
+    PasswordDto:
+      type: object
+      properties:
+        mustChange:
+          type: boolean
+          description: Indicates that the password must be changes
+        expired:
+          type: boolean
+          description: Indicates that the password has expired
+        expirationTime:
+          type: string
+          description: Password expiration date
+          format: date-time
+    UserDto:
       type: object
       properties:
         ucn:
           type: string
           description: Unique client number
-        domain:
-          type: string
-          description: User domain
         alias:
           type: string
           description: User alias(login)
-        passwordExpired:
-          type: boolean
-          description: Indicates that the password has expired
-        passwordMustChange:
-          type: boolean
-          description: Indicates that the password must be changes
-        passwordExpirationTime:
+        password:
+          $ref: '#/components/schemas/PasswordDto'
+        domain:
           type: string
-          description: Password expiration date
-          format: date-time
+          description: User domain
         authenticationProvider:
           type: string
           description: Authentication provider (systemId value)
         lock:
           $ref: '#/components/schemas/UserLock'
+        homePhone:
+          type: string
+          description: Home phone
+        mobilePhone:
+          type: string
+          description: Mobile phone. Basically the main phone number
+        email:
+          type: string
+          description: User email
+        auxMobilePhone:
+          type: string
+          description: Auxiliary mobile phone
+        phoneChangeSource:
+          type: string
         codeWord:
           type: string
           description: User code word
@@ -373,39 +538,11 @@ components:
         remotePasswordRestore:
           type: boolean
           description: Indicates that remote password restore is enabled
-        homePhone:
-          type: string
-          description: Home phone
-        mobilePhone:
-          type: string
-          description: Mobile phone. Basically the main phone number
-        auxMobilePhone:
-          type: string
-          description: Auxiliary mobile phone
-        email:
-          type: string
-          description: User email
-        linkedUcn:
-          type: string
-          description: UCN of linked profile
-        linkedDomain:
-          type: string
-          description: Domain of linked profile
-        imsiStatus:
-          type: string
-          description: Imsi status
-          enum:
-            - SET
-            - NOT_SET
-            - NOT_AVAILABLE
-            - NOT_MONITORING
+        linkedUser:
+          $ref: '#/components/schemas/UserDto'
         discredited:
           type: boolean
           description: Indicated that user is discredited
-        discreditedTillTime:
-          type: string
-          description: DateTime when user became discredited
-          format: date-time
         discreditedCodes:
           type: array
           description: List of discredited codes
@@ -413,13 +550,37 @@ components:
             type: integer
             description: List of discredited codes
             format: int32
-        lastPasswordRestoreDate:
+        discreditedTillTime:
+          type: string
+          description: DateTime when user became discredited
+          format: date-time
+        imsiStatus:
+          type: string
+          description: Imsi status
+        activated:
+          type: boolean
+          description: Indicates that user is activated
+        lastPasswordRestoreTime:
           type: string
           description: DateTime of the last attempt to restore password
           format: date-time
         lastPasswordRestoreChannel:
           type: string
           description: Channel used when last trying to restore password
+        devices:
+          type: array
+          description: List of linked devices
+          items:
+            $ref: '#/components/schemas/DeviceDto'
+        authenticationMethods:
+          $ref: '#/components/schemas/AuthenticationMethodsDto'
+    UserInfoDto:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserDto'
+        client:
+          $ref: '#/components/schemas/ClientDto'
     UserLock:
       type: object
       properties:
