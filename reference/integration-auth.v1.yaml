@@ -20,36 +20,36 @@ paths:
             schema:
               $ref: '#/components/schemas/GetSmsOtpRestRequest'
       responses:
-        "200":
-          description: default response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetSmsOtpResponse'
-        "500":
-          description: 'Returned error types: generic_error'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
         "403":
           description: 'Returned error types: imsi_not_verified'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
-        "422":
-          description: Incorrect request data
+        "500":
+          description: 'Returned error types: generic_error'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationExceptionObject'
+                $ref: '#/components/schemas/ExceptionObject'
         "404":
           description: 'Returned error types: user_not_found'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
+        "200":
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSmsOtpResponse'
+        "422":
+          description: Incorrect request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationExceptionObject'
   /authentication/sms-otp:
     post:
       tags:
@@ -64,36 +64,36 @@ paths:
             schema:
               $ref: '#/components/schemas/GetSmsOtpRestRequest'
       responses:
-        "200":
-          description: default response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetSmsOtpResponse'
-        "500":
-          description: 'Returned error types: generic_error'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
         "403":
           description: 'Returned error types: imsi_not_verified'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
-        "422":
-          description: Incorrect request data
+        "500":
+          description: 'Returned error types: generic_error'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationExceptionObject'
+                $ref: '#/components/schemas/ExceptionObject'
         "404":
           description: 'Returned error types: user_not_found'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
+        "200":
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSmsOtpResponse'
+        "422":
+          description: Incorrect request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationExceptionObject'
   /devices:
     post:
       tags:
@@ -150,18 +150,6 @@ paths:
           schema:
             type: string
       responses:
-        "200":
-          description: default response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeviceToken'
-        "403":
-          description: 'Returned error types: device_token_not_active'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
         "404":
           description: 'Returned error types: device_not_found'
           content:
@@ -174,6 +162,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionObject'
+        "403":
+          description: 'Returned error types: device_token_not_active'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
+        "200":
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceToken'
   /user:
     get:
       tags:
@@ -218,6 +218,12 @@ paths:
               type: string
             default: ""
       responses:
+        "403":
+          description: User locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionObject'
         "404":
           description: User not found
           content:
@@ -236,12 +242,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserInfoDto'
-        "403":
-          description: User locked
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
 components:
   schemas:
     GetSmsOtpRestRequest:
@@ -256,12 +256,6 @@ components:
         domain:
           type: string
           description: User domain
-    GetSmsOtpResponse:
-      type: object
-      properties:
-        transactionId:
-          type: string
-          description: Transaction id of sms module according to sent sms otp
     ExceptionObject:
       type: object
       properties:
@@ -282,6 +276,12 @@ components:
           type: string
           description: Error message
       description: DTO defining format of response when any error has been occurred
+    GetSmsOtpResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          description: Transaction id of sms module according to sent sms otp
     ErrorField:
       type: object
       properties:
@@ -538,8 +538,6 @@ components:
         remotePasswordRestore:
           type: boolean
           description: Indicates that remote password restore is enabled
-        linkedUser:
-          $ref: '#/components/schemas/UserDto'
         discredited:
           type: boolean
           description: Indicated that user is discredited
