@@ -3,7 +3,7 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-  - url: http://localhost:8888
+  - url: "http://localhost:8081"
     description: Generated server url
 paths:
   /authentication/getOtp:
@@ -18,38 +18,33 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GetSmsOtpRestRequest'
+              $ref: "#/components/schemas/GetSmsOtpRequest"
+        required: true
       responses:
-        "403":
-          description: 'Returned error types: imsi_not_verified'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
-        "500":
-          description: 'Returned error types: generic_error'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
         "404":
-          description: 'Returned error types: user_not_found'
+          description: "Returned error types: user_not_found"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExceptionObject'
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: "Returned error types: imsi_not_verified"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
         "200":
           description: default response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetSmsOtpResponse'
-        "422":
-          description: Incorrect request data
+                $ref: "#/components/schemas/GetSmsOtpResponse"
+        "500":
+          description: "Returned error types: generic_error"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationExceptionObject'
+                $ref: "#/components/schemas/ErrorResponseDto"
   /authentication/sms-otp:
     post:
       tags:
@@ -62,79 +57,33 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GetSmsOtpRestRequest'
+              $ref: "#/components/schemas/GetSmsOtpRequest"
+        required: true
       responses:
+        "404":
+          description: "Returned error types: user_not_found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
         "403":
-          description: 'Returned error types: imsi_not_verified'
+          description: "Returned error types: imsi_not_verified"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExceptionObject'
-        "500":
-          description: 'Returned error types: generic_error'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
-        "404":
-          description: 'Returned error types: user_not_found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
+                $ref: "#/components/schemas/ErrorResponseDto"
         "200":
           description: default response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetSmsOtpResponse'
-        "422":
-          description: Incorrect request data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationExceptionObject'
-  /devices:
-    post:
-      tags:
-        - Device token management
-      summary: Add device token
-      description: Create device token of user with specified ucn. <br />Endpoint
-        belongs to a group of private URLs that can only be accessed using the JWT
-        token. <br />If request is sending to the service directly then parameter
-        X-UNC must be present in headers. <br />If the request is sent through the
-        api gateway, then the X-UNC parameter is provided by it
-      operationId: addDeviceToken
-      parameters:
-        - name: X-UNC
-          in: header
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddDeviceTokenRequestBody'
-      responses:
+                $ref: "#/components/schemas/GetSmsOtpResponse"
         "500":
-          description: 'Returned error types: generic_error'
+          description: "Returned error types: generic_error"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExceptionObject'
-        "200":
-          description: default response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AddDeviceTokenResponse'
-        "404":
-          description: 'Returned error types: user_not_found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
+                $ref: "#/components/schemas/ErrorResponseDto"
   /devices/{deviceTokenId}:
     get:
       tags:
@@ -150,30 +99,72 @@ paths:
           schema:
             type: string
       responses:
-        "404":
-          description: 'Returned error types: device_not_found'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
-        "500":
-          description: 'Returned error types: generic_error'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
-        "403":
-          description: 'Returned error types: device_token_not_active'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
         "200":
           description: default response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceToken'
+                $ref: "#/components/schemas/DeviceTokenDto"
+        "404":
+          description: "Returned error types: device_not_found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "500":
+          description: "Returned error types: generic_error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: "Returned error types: device_token_not_active"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+  /devices:
+    post:
+      tags:
+        - Device token management
+      summary: Add device token
+      description: "Create device token of user with specified ucn. <br />Endpoint\
+        \ belongs to a group of private URLs that can only be accessed using the JWT\
+        \ token. <br />If request is sending to the service directly then parameter\
+        \ X-UNC must be present in headers. <br />If the request is sent through the\
+        \ api gateway, then the X-UNC parameter is provided by it"
+      operationId: addDeviceToken
+      parameters:
+        - name: X-UNC
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddDeviceTokenRequestDto"
+        required: true
+      responses:
+        "404":
+          description: "Returned error types: user_not_found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "200":
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddDeviceTokenResponseDto"
+        "500":
+          description: "Returned error types: generic_error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
   /user:
     get:
       tags:
@@ -181,72 +172,40 @@ paths:
       summary: Get user info
       operationId: getUserInfo
       parameters:
-        - name: ucn
+        - name: request
           in: query
-          description: Unique client identifier
           required: true
           schema:
-            type: string
-        - name: domain
-          in: query
-          description: User domain
-          required: false
-          schema:
-            type: string
-            default: master
-        - name: system
-          in: query
-          description: System identifier for which the ucn is specified
-          required: true
-          schema:
-            type: string
-        - name: type
-          in: query
-          description: Client type identifier in CIM model
-          required: false
-          schema:
-            type: string
-            default: "000"
-        - name: expand
-          in: query
-          description: List of parameters indicating the need to load additional info
-            of user. <br />* devices - load list of linked devices.
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-            default: ""
+            $ref: "#/components/schemas/UserInfoSearchParams"
       responses:
-        "403":
-          description: User locked
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionObject'
         "404":
           description: User not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExceptionObject'
+                type: object
         "500":
           description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ExceptionObject'
+                type: object
+        "403":
+          description: User locked
+          content:
+            application/json:
+              schema:
+                type: object
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserInfoDto'
+                $ref: "#/components/schemas/UserInfoDto"
 components:
   schemas:
-    GetSmsOtpRestRequest:
+    GetSmsOtpRequest:
       required:
-        - domain
         - id
       type: object
       properties:
@@ -256,7 +215,8 @@ components:
         domain:
           type: string
           description: User domain
-    ExceptionObject:
+          default: master
+    ErrorResponseDto:
       type: object
       properties:
         type:
@@ -274,7 +234,7 @@ components:
             - generic_error
         message:
           type: string
-          description: Error message
+          description: Localized error message
       description: DTO defining format of response when any error has been occurred
     GetSmsOtpResponse:
       type: object
@@ -282,37 +242,29 @@ components:
         transactionId:
           type: string
           description: Transaction id of sms module according to sent sms otp
-    ErrorField:
+    DeviceTokenDto:
       type: object
       properties:
-        field:
+        domain:
           type: string
-        message:
+          description: User domain
+        deviceName:
           type: string
-    ValidationExceptionObject:
-      type: object
-      properties:
-        type:
+          description: Device token name
+        ucn:
           type: string
-          description: Error type
-          enum:
-            - device_token_not_active
-            - user_locked
-            - user_locked
-            - user_locked
-            - device_not_found
-            - user_not_found
-            - imsi_not_verified
-            - generic_business_logic
-            - generic_error
-        message:
+          description: Unique client identifier
+        deviceTokenID:
           type: string
-          description: Error message
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorField'
-    AddDeviceTokenRequestBody:
+          description: Device token id (as PAN value)
+        challenge:
+          type: string
+          description: Number must be used for device token authentication
+        regDate:
+          type: string
+          description: Device token registration time
+          format: date-time
+    AddDeviceTokenRequestDto:
       type: object
       properties:
         uniqueDeviceId:
@@ -330,7 +282,7 @@ components:
         deviceName:
           type: string
           description: Device name (model and OS version)
-    AddDeviceTokenResponse:
+    AddDeviceTokenResponseDto:
       type: object
       properties:
         deviceTokenId:
@@ -345,28 +297,32 @@ components:
         requestActivationCode:
           type: boolean
           description: Indicates that need request to activate device token
-    DeviceToken:
+    UserInfoSearchParams:
+      required:
+        - system
+        - ucn
       type: object
       properties:
-        domain:
-          type: string
-          description: User domain
-        challenge:
-          type: string
-          description: Number must be used for device token authentication
-        deviceName:
-          type: string
-          description: Device token name
         ucn:
           type: string
           description: Unique client identifier
-        deviceTokenID:
+        domain:
           type: string
-          description: Device token id (as PAN value)
-        regDate:
+          description: User domain
+          default: master
+        system:
           type: string
-          description: Device token registration time
-          format: date-time
+          description: System identifier for which the ucn is specified
+        type:
+          type: string
+          description: Client type identifier in CIM model
+          default: "000"
+        expandParams:
+          type: array
+          items:
+            type: string
+      description: "User info search params. Following values may be used in expandParams:\
+        \ <br /><ul><li>devices - load list of linked devices</li></ui>"
     AuthenticationMethodsDto:
       type: object
       properties:
@@ -405,7 +361,7 @@ components:
           type: array
           description: List of client identifiers in another systems
           items:
-            $ref: '#/components/schemas/ClientIdentificationDto'
+            $ref: "#/components/schemas/ClientIdentificationDto"
     ClientIdentificationDto:
       type: object
       properties:
@@ -506,7 +462,7 @@ components:
           type: string
           description: User alias(login)
         password:
-          $ref: '#/components/schemas/PasswordDto'
+          $ref: "#/components/schemas/PasswordDto"
         domain:
           type: string
           description: User domain
@@ -514,7 +470,7 @@ components:
           type: string
           description: Authentication provider (systemId value)
         lock:
-          $ref: '#/components/schemas/UserLock'
+          $ref: "#/components/schemas/UserLock"
         homePhone:
           type: string
           description: Home phone
@@ -569,16 +525,16 @@ components:
           type: array
           description: List of linked devices
           items:
-            $ref: '#/components/schemas/DeviceDto'
+            $ref: "#/components/schemas/DeviceDto"
         authenticationMethods:
-          $ref: '#/components/schemas/AuthenticationMethodsDto'
+          $ref: "#/components/schemas/AuthenticationMethodsDto"
     UserInfoDto:
       type: object
       properties:
         user:
-          $ref: '#/components/schemas/UserDto'
+          $ref: "#/components/schemas/UserDto"
         client:
-          $ref: '#/components/schemas/ClientDto'
+          $ref: "#/components/schemas/ClientDto"
     UserLock:
       type: object
       properties:
