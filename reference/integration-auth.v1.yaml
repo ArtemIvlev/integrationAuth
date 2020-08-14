@@ -21,6 +21,12 @@ paths:
               $ref: "#/components/schemas/GetSmsOtpRequest"
         required: true
       responses:
+        "200":
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSmsOtpResponse"
         "404":
           description: "Returned error types: user_not_found"
           content:
@@ -39,12 +45,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
-        "200":
-          description: default response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetSmsOtpResponse"
   /authentication/sms-otp:
     post:
       tags:
@@ -60,6 +60,12 @@ paths:
               $ref: "#/components/schemas/GetSmsOtpRequest"
         required: true
       responses:
+        "200":
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSmsOtpResponse"
         "404":
           description: "Returned error types: user_not_found"
           content:
@@ -78,12 +84,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
-        "200":
-          description: default response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetSmsOtpResponse"
   /devices/{deviceTokenId}:
     get:
       tags:
@@ -105,12 +105,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
-        "200":
-          description: default response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DeviceTokenDto"
         "404":
           description: "Returned error types: device_not_found"
           content:
@@ -123,10 +117,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
+        "200":
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceTokenDto"
   /devices:
     post:
       tags:
         - Device token management
+        - Private with JWT
       summary: Add device token
       description: "Create device token of user with specified ucn. <br />Endpoint\
         \ belongs to a group of private URLs that can only be accessed using the JWT\
@@ -147,28 +148,31 @@ paths:
               $ref: "#/components/schemas/AddDeviceTokenRequestDto"
         required: true
       responses:
-        "404":
-          description: "Returned error types: user_not_found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
         "200":
           description: default response
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AddDeviceTokenResponseDto"
+        "404":
+          description: "Returned error types: user_not_found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
         "500":
           description: "Returned error types: generic_error"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
   /devices/{deviceTokenId}/activated:
     post:
       tags:
         - Device token management
+        - Private with JWT
       summary: Activate device token
       operationId: activateDeviceToken
       parameters:
@@ -185,12 +189,6 @@ paths:
               $ref: "#/components/schemas/ActivateDeviceTokenRequestDto"
         required: true
       responses:
-        "403":
-          description: "Returned error types: generic_business_logic"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
         "200":
           description: default response
           content:
@@ -209,9 +207,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
+        "403":
+          description: "Returned error types: generic_business_logic"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+      security:
+        - bearer: []
   /user:
     get:
       tags:
+        - Private without JWT
         - User management
       summary: Get user info
       operationId: getUserInfo
@@ -260,6 +267,12 @@ components:
           type: string
           description: User domain
           default: master
+    GetSmsOtpResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          description: Transaction id of sms module according to sent sms otp
     ErrorResponseDto:
       type: object
       properties:
@@ -283,22 +296,12 @@ components:
           type: string
           description: Localized error message title
       description: DTO defining format of response when any error has been occurred
-    GetSmsOtpResponse:
-      type: object
-      properties:
-        transactionId:
-          type: string
-          description: Transaction id of sms module according to sent sms otp
     DeviceTokenDto:
       type: object
       properties:
         domain:
           type: string
           description: User domain
-        regDate:
-          type: string
-          description: Device token registration time
-          format: date-time
         ucn:
           type: string
           description: Unique client identifier
@@ -311,6 +314,10 @@ components:
         deviceTokenID:
           type: string
           description: Device token id (as PAN value)
+        regDate:
+          type: string
+          description: Device token registration time
+          format: date-time
     AddDeviceTokenRequestDto:
       type: object
       properties:
@@ -622,3 +629,8 @@ components:
           type: string
           description: Reason comment of user lock
       description: User lock info
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
