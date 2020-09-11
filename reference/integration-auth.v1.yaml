@@ -3,7 +3,7 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-  - url: "http://localhost:8081"
+  - url: "http://localhost:8080/"
     description: Generated server url
 paths:
   /authentication/getOtp:
@@ -21,26 +21,26 @@ paths:
               $ref: "#/components/schemas/GetSmsOtpRequest"
         required: true
       responses:
+        "500":
+          description: "Returned error types: generic_error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
         "200":
           description: default response
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetSmsOtpResponse"
-        "404":
-          description: "Returned error types: user_not_found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
         "403":
           description: "Returned error types: imsi_not_verified"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
-        "500":
-          description: "Returned error types: generic_error"
+        "404":
+          description: "Returned error types: user_not_found"
           content:
             application/json:
               schema:
@@ -60,26 +60,26 @@ paths:
               $ref: "#/components/schemas/GetSmsOtpRequest"
         required: true
       responses:
+        "500":
+          description: "Returned error types: generic_error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
         "200":
           description: default response
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetSmsOtpResponse"
-        "404":
-          description: "Returned error types: user_not_found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
         "403":
           description: "Returned error types: imsi_not_verified"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
-        "500":
-          description: "Returned error types: generic_error"
+        "404":
+          description: "Returned error types: user_not_found"
           content:
             application/json:
               schema:
@@ -99,6 +99,12 @@ paths:
           schema:
             type: string
       responses:
+        "500":
+          description: "Returned error types: generic_error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
         "403":
           description: "Returned error types: device_token_not_active"
           content:
@@ -107,12 +113,6 @@ paths:
                 $ref: "#/components/schemas/ErrorResponseDto"
         "404":
           description: "Returned error types: device_not_found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
-        "500":
-          description: "Returned error types: generic_error"
           content:
             application/json:
               schema:
@@ -127,8 +127,7 @@ paths:
     post:
       tags:
         - Device token management
-        - Private with JWT
-      summary: Add device token
+      summary: Add device token (private)
       description: "Create device token of user with specified ucn. <br />Endpoint\
         \ belongs to a group of private URLs that can only be accessed using the JWT\
         \ token. <br />If request is sending to the service directly then parameter\
@@ -148,32 +147,31 @@ paths:
               $ref: "#/components/schemas/AddDeviceTokenRequestDto"
         required: true
       responses:
-        "200":
-          description: default response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AddDeviceTokenResponseDto"
-        "404":
-          description: "Returned error types: user_not_found"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponseDto"
         "500":
           description: "Returned error types: generic_error"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
+        "404":
+          description: "Returned error types: user_not_found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseDto"
+        "200":
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddDeviceTokenResponseDto"
       security:
         - bearer: []
   /devices/{deviceTokenId}/activated:
     post:
       tags:
         - Device token management
-        - Private with JWT
-      summary: Activate device token
+      summary: Activate device token (private)
       operationId: activateDeviceToken
       parameters:
         - name: deviceTokenId
@@ -195,8 +193,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActivateDeviceTokenResponseDto"
-        "404":
-          description: "Returned error types: device_not_found"
+        "403":
+          description: "Returned error types: generic_business_logic"
           content:
             application/json:
               schema:
@@ -207,8 +205,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponseDto"
-        "403":
-          description: "Returned error types: generic_business_logic"
+        "404":
+          description: "Returned error types: device_not_found"
           content:
             application/json:
               schema:
@@ -218,16 +216,46 @@ paths:
   /user:
     get:
       tags:
-        - Private without JWT
         - User management
       summary: Get user info
       operationId: getUserInfo
       parameters:
-        - name: request
+        - name: ucn
           in: query
+          description: Unique client identifier
           required: true
           schema:
-            $ref: "#/components/schemas/UserInfoSearchParams"
+            type: string
+        - name: domain
+          in: query
+          description: User domain
+          required: false
+          schema:
+            type: string
+            default: master
+        - name: system
+          in: query
+          description: System identifier for which the ucn is specified
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Client type identifier in CIM model
+          required: false
+          schema:
+            type: string
+            default: "000"
+        - name: expand
+          in: query
+          description: "Additional params allows to retrieve linked user data. <br />May\
+          \ contains following comma separated values: <br /><ul><li><i>devices</i>\
+          \ - include linked devices</li></ul>"
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
       responses:
         "200":
           description: OK
@@ -235,14 +263,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserInfoDto"
-        "404":
-          description: User not found
+        "500":
+          description: Unexpected error
           content:
             application/json:
               schema:
                 type: object
-        "500":
-          description: Unexpected error
+        "404":
+          description: User not found
           content:
             application/json:
               schema:
@@ -267,12 +295,6 @@ components:
           type: string
           description: User domain
           default: master
-    GetSmsOtpResponse:
-      type: object
-      properties:
-        transactionId:
-          type: string
-          description: Transaction id of sms module according to sent sms otp
     ErrorResponseDto:
       type: object
       properties:
@@ -282,8 +304,8 @@ components:
           enum:
             - device_token_not_active
             - user_locked
-            - user_locked
-            - user_locked
+            - user_locked.permanent
+            - user_locked.temporary
             - device_not_found
             - user_not_found
             - imsi_not_verified
@@ -295,7 +317,19 @@ components:
         message_title:
           type: string
           description: Localized error message title
+        additional_properties:
+          type: object
+          additionalProperties:
+            type: string
+            description: Additional properties
+          description: Additional properties
       description: DTO defining format of response when any error has been occurred
+    GetSmsOtpResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          description: Transaction id of sms module according to sent sms otp
     DeviceTokenDto:
       type: object
       properties:
@@ -370,32 +404,6 @@ components:
         personData:
           type: string
           description: Data required to personalize the device
-    UserInfoSearchParams:
-      required:
-        - system
-        - ucn
-      type: object
-      properties:
-        ucn:
-          type: string
-          description: Unique client identifier
-        domain:
-          type: string
-          description: User domain
-          default: master
-        system:
-          type: string
-          description: System identifier for which the ucn is specified
-        type:
-          type: string
-          description: Client type identifier in CIM model
-          default: "000"
-        expandParams:
-          type: array
-          items:
-            type: string
-      description: "User info search params. Following values may be used in expandParams:\
-        \ <br /><ul><li>devices - load list of linked devices</li></ui>"
     AuthenticationMethodsDto:
       type: object
       properties:
